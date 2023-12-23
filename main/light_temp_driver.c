@@ -45,9 +45,9 @@
 #define LEDC_OUTPUT_IO_CW       (3)  // Define the output GPIO form cold white
 #define LEDC_CHANNEL_WW         LEDC_CHANNEL_3
 #define LEDC_CHANNEL_CW         LEDC_CHANNEL_4
-#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_DUTY_MAX		    (8192)
-#define LEDC_FREQUENCY          (4000) // Frequency in Hertz. Set frequency at 4 kHz
+#define LEDC_DUTY_RES           LEDC_TIMER_10_BIT // Set duty resolution to 13 bits
+#define LEDC_DUTY_MAX		    (1024.f)
+#define LEDC_FREQUENCY          (18000) // Frequency in Hertz. Set frequency at 4 kHz
 
 
 static const char *TAG = "ESP_ZB_COLOR_DIMMABLE_LIGHT";
@@ -60,9 +60,9 @@ void set_temps() {
 	float dc_ww = 2.f - dc_cw;
 	if (dc_cw > 1.f) dc_cw = 1.f;
 	if (dc_ww > 1.f) dc_ww = 1.f;
-	ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_CW, (int)(6554.f * ratio * dc_cw)));
+	ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_CW, (int)(LEDC_DUTY_MAX * 0.8f * ratio * dc_cw)));
 	ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_CW));
-	ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_WW, (int)(6554.f * ratio * dc_ww)));
+	ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_WW, (int)(LEDC_DUTY_MAX * 0.8f * ratio * dc_ww)));
 	ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_WW));
 	ESP_LOGI(TAG, "Light temp change to ratio=%f c=%f w=%f l=%d", ratio, dc_cw, dc_ww, s_level);
 }

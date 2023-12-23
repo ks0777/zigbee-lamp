@@ -187,7 +187,11 @@ extern zb_uint_t g_trace_inside_intr;
  */
 
 #ifndef DOXYGEN
+#if defined ESP_ZIGBEE_TRACE
 #define TRACE_ENABLED_(mask,lev) ((lev) <= ZB_TRACE_LEVEL && ((mask) & ZB_TRACE_MASK))
+#else
+#define TRACE_ENABLED_(mask,lev) 0
+#endif
 #endif /* DOXYGEN */
 
 /**
@@ -470,7 +474,7 @@ void esp_zb_trace_msg_port(
 #if defined ESP_ZIGBEE_TRACE
 #define ZB_T1_TRACE(s, l, fmt, args) if ((zb_int_t)g_trace_level>=(zb_int_t)l && ((s) == (zb_uint_t)-1 || (s) & g_trace_mask) && !ZB_TRACE_INSIDE_INTR_BLOCK()) esp_zb_trace_msg_port(s, l, fmt, ZB_T0_TRACE args)
 #else
-#define ZB_T1_TRACE(s, l, args) if ((zb_int_t)ZB_TRACE_LEVEL>=(zb_int_t)l && ((s) == (zb_uint_t)-1 || (s) & ZB_TRACE_MASK) && !ZB_TRACE_INSIDE_INTR_BLOCK()) zb_trace_msg_port(s, l, ZB_T0_TRACE args)
+#define ZB_T1_TRACE(s, l, args) 
 #endif /* ESP_ZIGBEE_TRACE */
 #else
 #define ZB_T1_TRACE(s, l, args) \
@@ -601,18 +605,7 @@ typedef struct zb_byte128_struct_s
 
 #ifdef ZB_TRACE_LEVEL
 #ifndef ZB_TRACE_MASK
-#if   defined ZB_UZ2410
 #define ZB_TRACE_MASK ((zb_uint_t)-1)
-/* 1fb == all but MAC */
-//#define ZB_TRACE_MASK 0x1FB
-//#define ZB_TRACE_MASK 0xffff & (~(TRACE_SUBSYSTEM_SECUR|TRACE_SUBSYSTEM_ZCL))
-#elif defined C8051F120
-
-//#define ZB_TRACE_MASK 0xffff & (~(TRACE_SUBSYSTEM_SECUR|TRACE_SUBSYSTEM_ZCL))
-#define ZB_TRACE_MASK ((zb_uint_t)-1)
-#else
-#define ZB_TRACE_MASK ((zb_uint_t)-1)
-#endif  /* uz2410... */
 #endif  /* if not defined trace_mask */
 #endif  /* if defined trace level */
 
@@ -645,16 +638,6 @@ typedef struct zb_byte128_struct_s
 #define TRACE_ARG_SIZE(n_h, n_d, n_l, n_p, n_a) __FILE__,__LINE__, (n_h + n_d*2 + n_l*4 + n_p*3 + n_a*8)
 #else
 #define TRACE_ARG_SIZE(n_h, n_d, n_l, n_p, n_a) ZB_TRACE_FILE_ID,__LINE__, (n_h + n_d*2 + n_l*4 + n_p*3 + n_a*8)
-#endif
-
-#elif defined ZB_IAR && defined ZB8051
-
-/* IAR for 8051 passes 1-byte arguments as 2-bytes to vararg functions. Keil uses
- * 3-bytes pointers while IAR - 2-bytes pointers */
-#ifndef ZB_BINARY_TRACE
-#define TRACE_ARG_SIZE(n_h, n_d, n_l, n_p, n_a) __FILE__,__LINE__, (n_h*2 + n_d*2 + n_l*4 + n_p*2 + n_a*8)
-#else
-#define TRACE_ARG_SIZE(n_h, n_d, n_l, n_p, n_a) ZB_TRACE_FILE_ID,__LINE__, (n_h*2 + n_d*2 + n_l*4 + n_p*2 + n_a*8)
 #endif
 
 #elif defined ZB_PLATFORM_XAP5

@@ -23,6 +23,8 @@
 #error Define ZB_ED_ROLE in idf.py menuconfig to compile light (End Device) source code.
 #endif
 
+#define STACK_SIZE 16384
+
 static const char *TAG = "ESP_ZB_ON_OFF_LIGHT";
 /********************* Define functions **************************/
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
@@ -227,7 +229,25 @@ void app_main(void)
     };
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
+	ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     light_color_driver_init(LIGHT_DEFAULT_OFF);
     light_temp_driver_init(LIGHT_DEFAULT_OFF);
-    xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
+
+	wifi_sta_do_connect(true);
+
+	nvs_handle_t nvs_handle;
+	ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
+	uint8_t current_mode;
+	nvs_get_u8(nvs_handle, "direct_mode", &current_mode);
+	nvs_close(nvs_handle);
+	
+	if (current_mode == 0) {
+		xTaskCreate(esp_zb_task, "Zigbee_main", STACK_SIZE/2, NULL, 5, NULL);
+	}
+	StaticTask_t xTaskBuffer;
+	StackType_t *xStack = malloc(STACK_SIZE*sizeof(StackType_t));
+	xTaskCreateStatic(udp_server_task, "udp_server", STACK_SIZE, NULL, 5, xStack, &xTaskBuffer);
+	
 }
